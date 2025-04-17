@@ -24,8 +24,7 @@ from kauldron.modules import attention
 from kauldron.modules import knn_types
 from kauldron.modules import transformers
 from kauldron.modules import vit as kd_vit
-from kauldron.typing import Dim, Float, Initializer, Shape, check_type, set_shape, typechecked  # pylint: disable=g-multiple-import,g-importing-member
-import numpy as np
+from kauldron.typing import Dim, Float, Initializer, Shape, check_type, typechecked  # pylint: disable=g-multiple-import,g-importing-member
 import typeguard
 
 
@@ -41,9 +40,6 @@ class GeneralizedTransformer(nn.Module):
   # Submodules
   layers: Sequence[knn_types.TransformerBlock]
 
-  # Hparams
-  extra_tokens_layer: int | None = None
-
   # KD Keys
   tokens: kontext.Key = kontext.REQUIRED
 
@@ -54,15 +50,7 @@ class GeneralizedTransformer(nn.Module):
   def __call__(
       self,
       tokens: Float['*B N D'],
-      extra_tokens: Float['*B M D'] | None = None,
   ):
-    if (
-        self.extra_tokens_layer is not None
-        and not self.extra_tokens_layer < len(self.layers)
-    ):
-      raise ValueError(
-          f'{self.extra_tokens_layer=} must be < {len(self.layers)=}.'
-      )
 
     aux = [jnp.reshape(tokens, Shape('*B N D'))]
     latent_state = tokens
@@ -72,15 +60,7 @@ class GeneralizedTransformer(nn.Module):
         latent_state = jnp.concatenate([latent_state, tokens], axis=-2)
 
       # Self attention Layers.
-      for i, layer in enumerate(self.layers):
-        if extra_tokens is not None and h == self.n_iter - 1:
-          # Extra tokens:
-          # - add them on very last iteration only for decoding
-          if self.extra_tokens_layer == i:
-            latent_state = jnp.concatenate(
-                [extra_tokens, latent_state], axis=-2
-            )
-
+      for layer in self.layers:
         if h == self.n_iter - 1:
           # store intermediate features on last iteration
           aux.append(latent_state)
@@ -145,52 +125,19 @@ class Model(nn.Module, kw_only=True):
   # Sub-modules
   encoder: nn.Module
   processor: nn.Module
-  latent_posenc: nn.Module
-  training_decoder_patch_size: Sequence[int]
-  latent_posenc_axes: tuple[int, ...] = (-4, -3, -2)
-
-  n_output_frames: int | None = None
 
   @nn.compact
   @typechecked
   def __call__(
       self,
       video: Float['*B T H W C'],
-      add_latent_tokens: bool = True,
   ) -> list[Float['...']]:
-
-    if self.n_output_frames is not None:
-      set_shape(
-          'T_out', [self.n_output_frames // self.training_decoder_patch_size[0]]
-      )
-    else:
-      set_shape(
-          'T_out', [Shape('T_in')[0] // self.training_decoder_patch_size[0]]
-      )
-
-    set_shape('h_out', [Shape('H')[0] // self.training_decoder_patch_size[1]])
-    set_shape('w_out', [Shape('W')[0] // self.training_decoder_patch_size[2]])
-    set_shape('N_out', [np.prod(Shape('T_out h_out w_out'))])
-
     tokens = self.encoder(video)
 
     check_type(tokens, Float['*B N_in D'])
 
-    # define these even if not using so it's compatible with online train_eval
-    latent_tokens = self.latent_posenc(
-        Shape('*B T_out h_out w_out D'),
-        axis=self.latent_posenc_axes,
-    ).astype(tokens.dtype)
-    latent_tokens = einops.rearrange(
-        latent_tokens,
-        '... T_out h_out w_out D -> ... (T_out h_out w_out) D',
-    )
-
     # Run global self-attention transformer.
-    features = self.processor(
-        tokens=tokens,
-        extra_tokens=latent_tokens if add_latent_tokens else None,
-    )
+    features = self.processor(tokens)
 
     return features
 
