@@ -193,3 +193,25 @@ class PatchEmbedding(nn.Module):
         padding='VALID',
         dtype=images.dtype,
     )(images)
+
+
+class EncoderToReadout(nn.Module):
+  """Encoder to readout."""
+
+  embedding_shape: tuple[int, int, int]
+  readout_depth: int
+
+  @nn.compact
+  @typechecked
+  def __call__(self, all_features: list[Float['...']]) -> Float['...']:
+    readout_id = int(len(all_features) * self.readout_depth) - 1
+    features = all_features[readout_id]
+    features = nn.LayerNorm(dtype=features.dtype)(features)
+    readout_features = jnp.reshape(
+        features,
+        (features.shape[0],)  # batch
+        + (self.embedding_shape[0],)  # time
+        + (self.embedding_shape[1] * self.embedding_shape[2],)  # space
+        + features.shape[-1:],  # channels
+    )
+    return readout_features
