@@ -24,7 +24,11 @@ import einops
 from flax import linen as nn
 from jax import numpy as jnp
 from kauldron import kd
-from kauldron.typing import Float, check_type, typechecked  # pylint: disable=g-multiple-import,g-importing-member
+from kauldron import typing as kd_typing
+
+check_type = kd_typing.check_type
+Float = kd_typing.Float
+typechecked = kd_typing.typechecked
 
 
 class MLP(nn.Module):

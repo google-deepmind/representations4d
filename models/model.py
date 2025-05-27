@@ -16,16 +16,25 @@
 """Main model components."""
 
 from typing import Optional, Self, Sequence
+
 import einops
 from flax import linen as nn
 import jax.numpy as jnp
 from kauldron import kontext
+from kauldron import typing as kd_typing
 from kauldron.modules import attention
 from kauldron.modules import knn_types
 from kauldron.modules import transformers
 from kauldron.modules import vit as kd_vit
-from kauldron.typing import Dim, Float, Initializer, Shape, check_type, typechecked  # pylint: disable=g-multiple-import,g-importing-member
 import typeguard
+
+
+typechecked = kd_typing.typechecked
+Float = kd_typing.Float
+Shape = kd_typing.Shape
+Dim = kd_typing.Dim
+Initializer = kd_typing.Initializer
+check_type = kd_typing.check_type
 
 
 class GeneralizedTransformer(nn.Module):
@@ -97,23 +106,26 @@ class GeneralizedTransformer(nn.Module):
       mlp_kernel_init: Initializer = nn.initializers.xavier_uniform(),
       **kwargs,
   ):
+    blocks = []
+    for _ in range(num_layers):
+      blocks.append(
+          block_type(
+              attention_norm=nn.LayerNorm(dtype=dtype),
+              mlp_norm=nn.LayerNorm(dtype=dtype),
+              attention=attention.ImprovedMultiHeadDotProductAttention(
+                  num_heads=num_heads,
+                  qk_features=qk_features,
+                  v_features=v_features,
+                  kernel_init=attn_kernel_init,
+              ),
+              mlp=transformers.TransformerMLP(
+                  hidden_size=mlp_size, kernel_init=mlp_kernel_init
+              ),
+          )
+      )
+    blocks = tuple(blocks)
     return cls(
-        layers=tuple(
-            block_type(  # pylint: disable=g-complex-comprehension
-                attention_norm=nn.LayerNorm(dtype=dtype),
-                mlp_norm=nn.LayerNorm(dtype=dtype),
-                attention=attention.ImprovedMultiHeadDotProductAttention(
-                    num_heads=num_heads,
-                    qk_features=qk_features,
-                    v_features=v_features,
-                    kernel_init=attn_kernel_init,
-                ),
-                mlp=transformers.TransformerMLP(
-                    hidden_size=mlp_size, kernel_init=mlp_kernel_init
-                ),
-            )
-            for _ in range(num_layers)
-        ),
+        layers=blocks,
         **kwargs,
     )
 
