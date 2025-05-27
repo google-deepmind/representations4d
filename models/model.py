@@ -218,7 +218,6 @@ class EncoderToReadout(nn.Module):
   def __call__(self, all_features: list[Float['...']]) -> Float['...']:
     readout_id = int(len(all_features) * self.readout_depth) - 1
     features = all_features[readout_id]
-    features = nn.LayerNorm(dtype=features.dtype)(features)
     readout_features = jnp.reshape(
         features,
         (features.shape[0],)  # batch
