@@ -19,6 +19,7 @@ from typing import Optional, Self, Sequence
 
 import einops
 from flax import linen as nn
+import jax
 import jax.numpy as jnp
 from kauldron import kontext
 from kauldron import typing as kd_typing
@@ -212,6 +213,7 @@ class EncoderToReadout(nn.Module):
 
   embedding_shape: tuple[int, int, int]
   readout_depth: int
+  num_input_frames: int
 
   @nn.compact
   @typechecked
@@ -224,5 +226,19 @@ class EncoderToReadout(nn.Module):
         + (self.embedding_shape[0],)  # time
         + (self.embedding_shape[1] * self.embedding_shape[2],)  # space
         + features.shape[-1:],  # channels
+    )
+    out_shape = (
+        (readout_features.shape[0],)
+        + (self.num_input_frames,)
+        + (
+            self.embedding_shape[0]
+            * self.embedding_shape[1]
+            * self.embedding_shape[2]
+            // self.embedding_shape[0],
+        )
+        + (readout_features.shape[3],)
+    )
+    readout_features = jax.image.resize(
+        readout_features, out_shape, jax.image.ResizeMethod.CUBIC
     )
     return readout_features
