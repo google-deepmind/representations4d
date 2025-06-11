@@ -1,31 +1,28 @@
-# representations4d
+# 4D Representations
 
-TODO(b/411321642): Add a description for your new project, explain what is
-being released here, etc... Additional, the following sections are normally
-expected for all releases. Feel free to add additional sections if appropriate
-for your project.
+Welcome to the official Google DeepMind repository for 4D Representations.
+
+* [Scaling 4D Representations](https://arxiv.org/abs/2412.15212) focuses on evaluating self-supervised learning on non-semantic vision tasks that are more spatial (3D) and temporal (+1D = 4D), such as camera pose estimation, point and object tracking, and depth estimation. We show that by learning from very large video datasets, masked auto-encoding (MAE) with transformer video models actually scales, consistently improving performance on these 4D tasks, as model size increases from 20M all the way to the largest by far reported self-supervised video model 22B parameters.
+
+![scaling results](./assets/scaling_20M_20B.png)
 
 ## Installation
 
-Write instructions for how the user should install your code. The instructions
-should ideally be valid when copy-pasted. You can combine this with the Usage
-section if there's no separate installation step.
+```bash
+git clone https://github.com/google-deepmind/representations4d.git
+cd representations4d
 
-## Usage
-
-Write example usage of your code. The instructions should ideally be valid when
-copy-pasted, and will be used by your technical reviewer to verify that your
-package functions correctly.
+pip install .
+```
 
 ## Citing this work
 
-Add citation details here, usually a pastable BibTeX snippet:
-
 ```
-@article{publicationname,
-      title={Publication Name},
-      author={Author One and Author Two and Author Three},
-      year={2025},
+@article{carreira2024scaling,
+  title={Scaling 4D Representations},
+  author={Carreira, Jo{\~a}o and Gokay, Dilara and King, Michael and Zhang, Chuhan and Rocco, Ignacio and Mahendran, Aravindh and Keck, Thomas Albert and Heyward, Joseph and Koppula, Skanda and Pot, Etienne and others},
+  journal={arXiv preprint arXiv:2412.15212},
+  year={2024}
 }
 ```
 
