@@ -1,0 +1,17 @@
+[project]
+name = "representations4d"
+version = "0.1.0"
+description = "4D Representations codebase from Google DeepMind."
+dependencies = [
+  "einops",
+  "flax",
+  "jax",
+  "kauldron",
+  "numpy",
+  "typeguard",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["representations4d*"]  # package names should match these glob patterns (["*"] by default)

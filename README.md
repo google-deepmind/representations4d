@@ -12,6 +12,8 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 git clone https://github.com/google-deepmind/representations4d.git
 cd representations4d
 
+python3 -m venv representations4d_env
+source representations4d_env/bin/activate
 pip install .
 ```
 
