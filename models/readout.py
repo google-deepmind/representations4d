@@ -65,7 +65,8 @@ class AttentionReadout(nn.Module):
   is_training = kd.nn.train_property()
   dropout_rate: float = 0.0
 
-  output_shape: tuple[int, ...] | None = None
+  output_shape: tuple[int, int, int] | tuple[int, int, int, int] | None = None
+  decoding_patch_size: tuple[int, int, int] | None = None
 
   @nn.compact
   @typechecked
@@ -157,8 +158,23 @@ class AttentionReadout(nn.Module):
       token = jnp.squeeze(token, axis=-2)
 
     out = nn.Dense(self.num_classes, dtype=token.dtype)(token)
-    if self.output_shape is not None:
-      out = jnp.reshape(out, (out.shape[0],) + self.output_shape)
+    if self.output_shape is not None and self.decoding_patch_size is not None:
+      channel_dim = self.output_shape[-1] if len(self.output_shape) == 4 else 1
+      # Rearrange the output tensor to match the desired output shape, by
+      # reshaping the pixels and patches dimensions.
+      out = einops.rearrange(
+          out,
+          'B (n_pixels_patch0 n_pixels_patch1 n_pixels_patch2) (patch_size0'
+          ' patch_size1 patch_size2 c) -> B (n_pixels_patch0 patch_size0)'
+          ' (n_pixels_patch1 patch_size1) (n_pixels_patch2 patch_size2) c',
+          patch_size0=self.decoding_patch_size[0],
+          patch_size1=self.decoding_patch_size[1],
+          patch_size2=self.decoding_patch_size[2],
+          n_pixels_patch0=self.output_shape[0] // self.decoding_patch_size[0],
+          n_pixels_patch1=self.output_shape[1] // self.decoding_patch_size[1],
+          n_pixels_patch2=self.output_shape[2] // self.decoding_patch_size[2],
+          c=channel_dim,
+      )
 
     # note: these options only make sense for classification-type tasks
     if self.num_test_clips > 1 and not self.is_training:  # multi-clip eval
