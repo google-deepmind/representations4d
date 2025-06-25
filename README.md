@@ -17,6 +17,19 @@ source representations4d_env/bin/activate
 pip install .
 ```
 
+## Demo
+
+* [![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/deepmind/representations4d/blob/main/colabs/scaling4d_depth_demo.ipynb) Depth estimation with 4DS-dist-B backbone
+
+## Checkpoints
+
+We release the following checkpoints
+
+| Name | Model | # Params | File Size | Checkpoint |
+| -------- | ------- | :-------: | :-------: | :-------: |
+| 4DS-dist-B ScanNet depth | Backbone (Vit-B) + Readout | 105M | 420MB | [link](https://storage.googleapis.com/representations4d/checkpoints/scaling4d_dist_b_depth.npz) |
+
 ## Citing this work
 
 ```
