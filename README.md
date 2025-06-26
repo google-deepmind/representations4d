@@ -35,7 +35,7 @@ We release the following checkpoints
 ```
 @article{carreira2024scaling,
   title={Scaling 4D Representations},
-  author={Carreira, Jo{\~a}o and Gokay, Dilara and King, Michael and Zhang, Chuhan and Rocco, Ignacio and Mahendran, Aravindh and Keck, Thomas Albert and Heyward, Joseph and Koppula, Skanda and Pot, Etienne and others},
+  author={João Carreira and Dilara Gokay and Michael King and Chuhan Zhang and Ignacio Rocco and Aravindh Mahendran and Thomas Albert Keck and Joseph Heyward and Skanda Koppula and Etienne Pot and Goker Erdogan and Yana Hasson and Yi Yang and Klaus Greff and Guillaume Le Moing and Sjoerd van Steenkiste and Daniel Zoran and Drew A. Hudson and Pedro Vélez and Luisa Polanía and Luke Friedman and Chris Duvarney and Ross Goroshin and Kelsey Allen and Jacob Walker and Rishabh Kabra and Eric Aboussouan and Jennifer Sun and Thomas Kipf and Carl Doersch and Viorica Pătrăucean and Dima Damen and Pauline Luc and Mehdi S. M. Sajjadi and Andrew Zisserman},
   journal={arXiv preprint arXiv:2412.15212},
   year={2024}
 }
