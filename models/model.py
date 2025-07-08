@@ -212,7 +212,7 @@ class EncoderToReadout(nn.Module):
   """Encoder to readout."""
 
   embedding_shape: tuple[int, int, int]
-  readout_depth: int
+  readout_depth: float
   num_input_frames: int
 
   @nn.compact
