@@ -14,4 +14,4 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]  # list of folders that contain the packages (["."] by default)
-include = ["representations4d*"]  # package names should match these glob patterns (["*"] by default)
+include = ["representations4d*", "moog*"]  # package names should match these glob patterns (["*"] by default)
