@@ -6,6 +6,10 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 
 ![scaling results](./assets/scaling_20M_20B.png)
 
+* [Moving Off-the-Grid (MooG)](https://openreview.net/pdf?id=rjSPDVdUaw) introduces a self-supervised video representation model that departs from conventional “on-the-grid’’ methods by allowing latent tokens to move freely across space and time, enabling them to stay aligned with scene elements as they shift on the image plane. By combining cross-attention with positional embeddings, MooG disentangles representation structure from image structure, allowing tokens to bind to meaningful scene components rather than fixed pixel locations. Trained with a simple next-frame prediction objective on raw video data, MooG naturally learns tokens that track objects and structures over time, and demonstrates strong performance on a variety of downstream tasks when lightweight readouts are applied. Overall, MooG provides a powerful and flexible off-the-grid representation, outperforming traditional grid-based baselines and establishing a strong foundation for diverse 4D vision applications.
+
+![moog architecture](./assets/moog.png)
+
 ## Installation
 
 ```bash
@@ -39,6 +43,17 @@ We release the following checkpoints
   title={Scaling 4D Representations},
   author={João Carreira and Dilara Gokay and Michael King and Chuhan Zhang and Ignacio Rocco and Aravindh Mahendran and Thomas Albert Keck and Joseph Heyward and Skanda Koppula and Etienne Pot and Goker Erdogan and Yana Hasson and Yi Yang and Klaus Greff and Guillaume Le Moing and Sjoerd van Steenkiste and Daniel Zoran and Drew A. Hudson and Pedro Vélez and Luisa Polanía and Luke Friedman and Chris Duvarney and Ross Goroshin and Kelsey Allen and Jacob Walker and Rishabh Kabra and Eric Aboussouan and Jennifer Sun and Thomas Kipf and Carl Doersch and Viorica Pătrăucean and Dima Damen and Pauline Luc and Mehdi S. M. Sajjadi and Andrew Zisserman},
   journal={arXiv preprint arXiv:2412.15212},
+  year={2024}
+}
+```
+
+```
+@article{van2024moving,
+  title={Moving Off-the-Grid: Scene-Grounded Video Representations},
+  author={Sjoerd van Steenkiste and Daniel Zoran and Yi Yang and Yulia Rubanova and Rishabh Kabra and Carl Doersch and Dilara Gokay and Joseph Heyward and Etienne Pot and Klaus Greff and Drew Hudson and Thomas Albert Keck and João Carreira and Alexey Dosovitskiy and Mehdi S. M. Sajjadi and Thomas Kipf},
+  journal={Advances in Neural Information Processing Systems},
+  volume={37},
+  pages={124319--124346},
   year={2024}
 }
 ```
