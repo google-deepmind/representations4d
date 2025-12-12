@@ -452,7 +452,7 @@ def _make_ds(
       split="train",
       shuffle=False,
       # shuffle_buffer_size=shuffle_buffer_size,
-      data_dir="/tmp/kubric-public/grain",
+      data_dir="../../kubric-public/grain",
       transforms=transforms,
       batch_size=batch_size,
       num_workers=0,

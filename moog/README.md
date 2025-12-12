@@ -23,12 +23,12 @@ pip install .
 curl -O https://storage.googleapis.com/pub/gsutil.tar.gz
 tar -xzf gsutil.tar.gz
 mkdir kubric-public
-./gsutil/gsutil -m cp -r gs://kubric-public/grain/ kubric-public
+./gsutil/gsutil -m cp -r gs://kubric-public/grain kubric-public
 ```
 
 ### 3. Train
 
 ```bash
-cd representations4d/moog/configs
+cd moog/configs
 python -m kauldron.main --cfg=movi.py --cfg.workdir=moog
 ```
