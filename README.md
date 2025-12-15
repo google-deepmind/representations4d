@@ -6,9 +6,15 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 
 ![scaling results](./assets/scaling_20M_20B.png)
 
-* [Moving Off-the-Grid (MooG)](https://openreview.net/pdf?id=rjSPDVdUaw) introduces a self-supervised video representation model that departs from conventional “on-the-grid’’ methods by allowing latent tokens to move freely across space and time, enabling them to stay aligned with scene elements as they shift on the image plane. By combining cross-attention with positional embeddings, MooG disentangles representation structure from image structure, allowing tokens to bind to meaningful scene components rather than fixed pixel locations. Trained with a simple next-frame prediction objective on raw video data, MooG naturally learns tokens that track objects and structures over time, and demonstrates strong performance on a variety of downstream tasks when lightweight readouts are applied. Overall, MooG provides a powerful and flexible off-the-grid representation, outperforming traditional grid-based baselines and establishing a strong foundation for diverse 4D vision applications.
+<!-- disableFinding(LINE_OVER_80) -->
+
+* [Moving Off-the-Grid (MooG)](https://openreview.net/pdf?id=rjSPDVdUaw) introduces a self-supervised video representation that allows latent tokens to move freely across space and time, staying aligned with dynamic scene elements rather than fixed pixel grids. By combining cross-attention with positional embeddings, MooG disentangles representation structure from image structure, enabling tokens to bind to meaningful objects and regions. Trained with a simple next-frame prediction objective, MooG naturally learns object-centric tracking representations and achieves strong performance across downstream tasks with lightweight readouts.
 
 ![moog architecture](./assets/moog.png)
+
+* [Recurrent Video Masked Autoencoders (RVM)]() proposes a recurrent, transformer-based approach to video representation learning that models temporal structure using an asymmetric masking objective and simple pixel reconstruction loss. RVM learns an efficient general-purpose encoder that matches or exceeds state-of-the-art video models on action recognition, tracking, and dense geometric tasks, while remaining competitive with strong image models. It is particularly effective in the small-model regime, achieving up to 30× greater parameter efficiency without distillation.
+
+![rvm architecture](./assets/RVM.png)
 
 ## Installation
 
@@ -27,7 +33,13 @@ pip install .
 Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/scaling4d_depth_demo.ipynb) Depth estimation with 4DS-B-dist-e backbone
 
 * [![Open In
-Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/moog_inference_demo.ipynb) Box tracking and point tracking with MooG backbone. Also see [Instructions](moog/README.md) to train MooG from scratch
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/moog_inference_demo.ipynb) Box tracking and point tracking with MooG backbone
+
+* [![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_inference_demo.ipynb) Segmentation tracking and keypoint tracking with RVM backbone
+
+* [![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_evaluation_demo.ipynb) Segmentation tracking and keypoint tracking evaluation between RVM and popular video models
 
 ## Checkpoints
 
@@ -41,6 +53,7 @@ We release the following checkpoints
 | MooG | Backbone (ConvNet + Transformer) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_backbone_ckpt_164335139.npz) |
 | MooG | Box Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_box_track_head_ckpt_164335139.npz) |
 | MooG | Point Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_point_track_head_ckpt_164335139.npz) |
+| RVM | Backbone (ViT-L) | 375M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_large16_256_175558463.npz) |
 
 ## Citing this work
 
@@ -61,6 +74,15 @@ We release the following checkpoints
   volume={37},
   pages={124319--124346},
   year={2024}
+}
+```
+
+```
+@article{zoran2025recurrent,
+  title={Recurrent Video Masked Autoencoders},
+  author={Daniel Zoran and Nikhil Parthasarathy and Yi Yang and Drew A Hudson and João Carreira and Andrew Zisserman},
+  journal={arXiv preprint arXiv:},
+  year={2025}
 }
 ```
 
