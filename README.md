@@ -12,7 +12,7 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 
 ![moog architecture](./assets/moog.png)
 
-* [Recurrent Video Masked Autoencoders (RVM)]() proposes a recurrent, transformer-based approach to video representation learning that models temporal structure using an asymmetric masking objective and simple pixel reconstruction loss. RVM learns an efficient general-purpose encoder that matches or exceeds state-of-the-art video models on action recognition, tracking, and dense geometric tasks, while remaining competitive with strong image models. It is particularly effective in the small-model regime, achieving up to 30× greater parameter efficiency without distillation.
+* [Recurrent Video Masked Autoencoders (RVM)](https://arxiv.org/abs/2512.13684) proposes a recurrent, transformer-based approach to video representation learning that models temporal structure using an asymmetric masking objective and simple pixel reconstruction loss. RVM learns an efficient general-purpose encoder that matches or exceeds state-of-the-art video models on action recognition, tracking, and dense geometric tasks, while remaining competitive with strong image models. It is particularly effective in the small-model regime, achieving up to 30× greater parameter efficiency without distillation.
 
 ![rvm architecture](./assets/RVM.png)
 
@@ -39,7 +39,7 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_inference_demo.ipynb) Segmentation tracking and keypoint tracking with RVM backbone
 
 * [![Open In
-Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_evaluation_demo.ipynb) Segmentation tracking and keypoint tracking evaluation between RVM and popular video models
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_evaluation_demo.ipynb) Segmentation tracking and keypoint tracking evaluation for video models
 
 ## Checkpoints
 
@@ -53,7 +53,7 @@ We release the following checkpoints
 | MooG | Backbone (ConvNet + Transformer) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_backbone_ckpt_164335139.npz) |
 | MooG | Box Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_box_track_head_ckpt_164335139.npz) |
 | MooG | Point Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_point_track_head_ckpt_164335139.npz) |
-| RVM | Backbone (ViT-L) | 375M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_large16_256_175558463.npz) |
+| RVM | Backbone (ViT-L) | 375M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_large16_256_202497301.npz) |
 
 ## Citing this work
 
@@ -81,7 +81,7 @@ We release the following checkpoints
 @article{zoran2025recurrent,
   title={Recurrent Video Masked Autoencoders},
   author={Daniel Zoran and Nikhil Parthasarathy and Yi Yang and Drew A Hudson and João Carreira and Andrew Zisserman},
-  journal={arXiv preprint arXiv:},
+  journal={arXiv preprint arXiv:2512.13684},
   year={2025}
 }
 ```
