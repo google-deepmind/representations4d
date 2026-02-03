@@ -53,7 +53,10 @@ We release the following checkpoints
 | MooG | Backbone (ConvNet + Transformer) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_backbone_ckpt_164335139.npz) |
 | MooG | Box Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_box_track_head_ckpt_164335139.npz) |
 | MooG | Point Track Readout (Cross Attention) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_point_track_head_ckpt_164335139.npz) |
+| RVM | Backbone (ViT-S) | 34M | 270MB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_small16_256_204031069.npz) |
+| RVM | Backbone (ViT-B) | 117M | 641MB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_base16_256_203916225.npz) |
 | RVM | Backbone (ViT-L) | 375M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_large16_256_202497301.npz) |
+| RVM | Backbone (ViT-H) | 743M | 3.1GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_huge16_256_203854202.npz) |
 
 ## Citing this work
 
