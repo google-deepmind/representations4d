@@ -23,7 +23,7 @@ pip install .
 curl -O https://storage.googleapis.com/pub/gsutil.tar.gz
 tar -xzf gsutil.tar.gz
 mkdir kubric-public
-./gsutil/gsutil -m cp -r gs://kubric-public/grain kubric-public
+gcloud storage cp --recursive gs://kubric-public/grain kubric-public
 ```
 
 ### 3. Train
