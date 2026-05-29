@@ -16,6 +16,10 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 
 ![rvm architecture](./assets/RVM.png)
 
+*[A Mixed Diet Makes DINO An Omnivorous Vision Encoder](https://arxiv.org/abs/2602.24181) proposes a lightweight post-training recipe to adapt visual foundation models like DINOv2. The objective is to increase feature alignment between multi-sensory views (e.g., RGB images and depth maps) of the same scene. Omnivorous post-training not only improves a vision model's representation alignment (e.g., facilitating cross-modal retrieval), but also its downstream scene understanding (on 3D and semantic tasks), and ability to transfer to novel unseen modalities.
+
+![omnivorous architecture](./assets/omnivorous-method.png)
+
 ## Installation
 
 ```bash
@@ -41,6 +45,9 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 * [![Open In
 Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/rvm_evaluation_demo.ipynb) Segmentation tracking and keypoint tracking evaluation for video models
 
+* [![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/omnivorous_dino_inference_demo.ipynb) Demo showing feature alignment in paired visual modalities in DINOv2 and Omnivorous Vision models.
+
 ## Checkpoints
 
 We release the following checkpoints
@@ -57,6 +64,8 @@ We release the following checkpoints
 | RVM | Backbone (ViT-B) | 117M | 641MB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_base16_256_203916225.npz) |
 | RVM | Backbone (ViT-L) | 375M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_large16_256_202497301.npz) |
 | RVM | Backbone (ViT-H) | 743M | 3.1GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_huge16_256_203854202.npz) |
+| DINOv2 | Frozen Teacher (ViT-B) | 86.5M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/frozen_dinov2-vit_b.safetensors) |
+| Omnivorous DINOv2 |  Adapted Student (ViT-B) | 86.5M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/omnivorous_dinov2-vit_b.safetensors) |
 
 ## Citing this work
 
@@ -86,6 +95,17 @@ We release the following checkpoints
   author={Daniel Zoran and Nikhil Parthasarathy and Yi Yang and Drew A Hudson and João Carreira and Andrew Zisserman},
   journal={arXiv preprint arXiv:2512.13684},
   year={2025}
+}
+```
+
+```
+@InProceedings{Kabra_2026_CVPR,
+    author    = {Kabra, Rishabh and Ovsjanikov, Maks and Hudson, Drew A. and Xia, Ye and Koppula, Skanda and Araujo, Andre and Carreira, Joao and Mitra, Niloy J.},
+    title     = {A Mixed Diet Makes DINO An Omnivorous Vision Encoder},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2026},
+    pages     = {36850-36860}
 }
 ```
 
