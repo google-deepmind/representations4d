@@ -125,7 +125,7 @@ def get_config():
           init_value=0.0,
           peak_value=1e-4,
           warmup_steps=1000,
-          decay_steps=cfg.ref.num_train_steps,
+          decay_steps=cfg.ref.num_train_steps,  # pyrefly: ignore[bad-argument-type]
           end_value=1e-7,
       )
   }

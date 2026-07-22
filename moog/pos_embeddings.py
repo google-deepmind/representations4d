@@ -82,14 +82,14 @@ class FourierEmbedding(nn.Module):
   @typechecked
   @nn.compact
   def __call__(self, inputs: Float['... d']) -> Float['...']:
-    if max(self.axes) >= 0:
+    if max(self.axes) >= 0:  # pyrefly: ignore[bad-argument-type]
       raise ValueError(f'Axes must be negative. Provided axes: {self.axes}.')
-    if -1 in self.axes:
+    if -1 in self.axes:  # pyrefly: ignore[not-iterable]
       raise ValueError(
           f'Do not include feature axis (-1). Provided axes: {self.axes}.'
       )
 
-    emb_shape = tuple([inputs.shape[axis] for axis in self.axes])
+    emb_shape = tuple([inputs.shape[axis] for axis in self.axes])  # pyrefly: ignore[not-iterable]
 
     # NeRF-style Fourier/sinusoidal position encoding.
     coords = _create_gradient_grid(emb_shape, value_range=(-1.0, 1.0))
@@ -98,9 +98,9 @@ class FourierEmbedding(nn.Module):
     )  # TODO(tkipf): Consider removing pi scaling if we see border artifacts.
 
     # Re-add any removed axes (excl. leading axes, these are broadcasted).
-    all_axes = list(range(min(self.axes), -1))  # Excl. leading & feature axes.
+    all_axes = list(range(min(self.axes), -1))  # Excl. leading & feature axes.  # pyrefly: ignore[bad-argument-type]
     axes_to_add = tuple(
-        [axis - min(self.axes) for axis in all_axes if axis not in self.axes]
+        [axis - min(self.axes) for axis in all_axes if axis not in self.axes]  # pyrefly: ignore[bad-argument-type, not-iterable]
     )
     pos_embedding = jnp.expand_dims(pos_embedding, axis=axes_to_add)
 

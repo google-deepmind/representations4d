@@ -62,7 +62,7 @@ class GeneralizedTransformer(nn.Module):
       tokens: Float['*B N D'],
   ):
 
-    aux = [jnp.reshape(tokens, Shape('*B N D'))]
+    aux = [jnp.reshape(tokens, Shape('*B N D'))]  # pyrefly: ignore[bad-argument-type]
     latent_state = tokens
 
     for h in range(self.n_iter):

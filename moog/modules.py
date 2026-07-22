@@ -288,7 +288,7 @@ class Moog(nn.Module):
 
     if self.use_loss_gradient:
       # Then correct (if we have observations)
-      state_grad_projection = self.state_grad_projector(
+      state_grad_projection = self.state_grad_projector(  # pyrefly: ignore[not-callable]
           jnp.concatenate([state_predicted, state_gradient], axis=-1)
       )
     else:
@@ -396,7 +396,7 @@ class DenseReadoutResults(TypedDict):
 
   values: Float['*b T h_sub w_sub C']
   subsampled_targets: Float['*b T h_sub w_sub C']
-  subsampled_mask: Optional[Float['*b T h_sub w_sub C']] = None
+  subsampled_mask: Optional[Float['*b T h_sub w_sub C']] = None  # pyrefly: ignore[bad-class-definition]
 
 
 class DenseReadout(nn.Module):
@@ -579,7 +579,7 @@ class ConditionalAutoregressiveReadout(nn.Module):
           output_size=self.output_value_size,
           name='output_values',
       )(states_corrected)
-      output_values = self.output_value_activation(output_values)
+      output_values = self.output_value_activation(output_values)  # pyrefly: ignore[not-callable]
     else:
       output_values = None
 
@@ -592,9 +592,9 @@ class ConditionalAutoregressiveReadout(nn.Module):
     else:
       output_logits = None
 
-    visibility = jax.nn.sigmoid(output_logits[..., :1])
+    visibility = jax.nn.sigmoid(output_logits[..., :1])  # pyrefly: ignore[unsupported-operation]
     if self.use_certainty:
-      certainty = jax.nn.sigmoid(output_logits[..., 1:])
+      certainty = jax.nn.sigmoid(output_logits[..., 1:])  # pyrefly: ignore[unsupported-operation]
       visible = (visibility * certainty > self.certainty_threshold).astype(
           jnp.float32
       )
@@ -699,15 +699,15 @@ class ReadoutWrapper(nn.Module, kw_only=True):  # pytype: disable=invalid-functi
   @property
   def _model_keypaths(self) -> dict[str, str | None]:
     if self.model_inputs is None:
-      return kontext.get_keypaths(self.model)
+      return kontext.get_keypaths(self.model)  # pyrefly: ignore[bad-return]
     else:
       return self.model_inputs
 
   def _get_readout_keypaths(self, head: str) -> dict[str, str | None]:
     if self.readout_inputs[head] is None:
-      return kontext.get_keypaths(self.readout_heads[head])
+      return kontext.get_keypaths(self.readout_heads[head])  # pyrefly: ignore[bad-return]
     else:
-      return self.readout_inputs[head]
+      return self.readout_inputs[head]  # pyrefly: ignore[bad-return]
 
   def _get_model_inputs(self, kwargs):
     # separate out the model kwargs
@@ -731,10 +731,10 @@ class ReadoutWrapper(nn.Module, kw_only=True):  # pytype: disable=invalid-functi
         if not self._is_external_keypath(v)
     }
     # resolve (non-batch) readout keys
-    interms = self.scope.root.variables()['intermediates']
+    interms = self.scope.root.variables()['intermediates']  # pyrefly: ignore[missing-attribute]
     ctx = {'preds': preds, 'interms': interms}
 
     readout_other_inputs = kontext.resolve_from_keypaths(
-        ctx, readout_other_keypaths
+        ctx, readout_other_keypaths  # pyrefly: ignore[bad-argument-type]
     )
     return readout_batch_inputs | readout_other_inputs

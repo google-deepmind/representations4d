@@ -226,7 +226,7 @@ class ImprovedTransformer(nn.Module):
   hidden_size: int | None = None
   output_size: int | None = None
   cross_attn_only: bool = False
-  attention_fn: Callable[..., Float] | None = None
+  attention_fn: Callable[..., Float] | None = None  # pyrefly: ignore[not-a-type]
 
   @typechecked
   @nn.compact
@@ -310,7 +310,7 @@ class ImprovedTransformerBlock(nn.Module):
   qkv_size: int
   cross_attn_only: bool = False
   zero_init: bool = False
-  attention_fn: Callable[..., Float] | None = None
+  attention_fn: Callable[..., Float] | None = None  # pyrefly: ignore[not-a-type]
 
   @nn.compact
   def __call__(
@@ -367,5 +367,5 @@ class ImprovedTransformerBlock(nn.Module):
     dense_kwargs = (
         {'kernel_init': nn.initializers.zeros} if self.zero_init else {}
     )
-    mlp_out = nn.Dense(width, dtype=h.dtype, name='MLP_out', **dense_kwargs)(h)
+    mlp_out = nn.Dense(width, dtype=h.dtype, name='MLP_out', **dense_kwargs)(h)  # pyrefly: ignore[bad-argument-type]
     return attn_out + mlp_out
