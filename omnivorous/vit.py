@@ -343,7 +343,7 @@ class ViTBackbone(nn.Module):
           pooling=self.pooling,
           posembs=self.posembs,
           positional_embedding=self.positional_embedding,
-          pos_interpolation_method=self.pos_interpolation_method,
+          pos_interpolation_method=self.pos_interpolation_method,  # pyrefly: ignore[bad-argument-type]
       )(x)
 
     if self.use_pre_norm:
