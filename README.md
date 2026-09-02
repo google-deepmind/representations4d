@@ -16,9 +16,13 @@ Welcome to the official Google DeepMind repository for 4D Representations.
 
 ![rvm architecture](./assets/RVM.png)
 
-*[A Mixed Diet Makes DINO An Omnivorous Vision Encoder](https://arxiv.org/abs/2602.24181) proposes a lightweight post-training recipe to adapt visual foundation models like DINOv2. The objective is to increase feature alignment between multi-sensory views (e.g., RGB images and depth maps) of the same scene. Omnivorous post-training not only improves a vision model's representation alignment (e.g., facilitating cross-modal retrieval), but also its downstream scene understanding (on 3D and semantic tasks), and ability to transfer to novel unseen modalities.
+* [A Mixed Diet Makes DINO An Omnivorous Vision Encoder](https://arxiv.org/abs/2602.24181) proposes a lightweight post-training recipe to adapt visual foundation models like DINOv2. The objective is to increase feature alignment between multi-sensory views (e.g., RGB images and depth maps) of the same scene. Omnivorous post-training not only improves a vision model's representation alignment (e.g., facilitating cross-modal retrieval), but also its downstream scene understanding (on 3D and semantic tasks), and ability to transfer to novel unseen modalities.
 
 ![omnivorous architecture](./assets/omnivorous-method.png)
+
+* [GenCeption](https://arxiv.org/abs/2607.09024) leverages a pre-trained video generative diffusion backbone (WAN 2.1) to define a feed-forward perception model, capable of performing various vision tasks steered by text instructions. GenCeption achieves state-of-the-art performance across depth, surface normal, and camera pose estimation, expression-referring segmentation, and 3D keypoint prediction, often matching or surpassing specialized models. A single generalist model handles all tasks via text prompts.
+
+![genception architecture](./assets/genception.png)
 
 ## Installation
 
@@ -48,6 +52,9 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 * [![Open In
 Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/omnivorous_dino_inference_demo.ipynb) Demo showing feature alignment in paired visual modalities in DINOv2 and Omnivorous Vision models.
 
+* [![Open In
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google-deepmind/representations4d/blob/main/colabs/genception_inference_demo.ipynb) Multi-task video perception with GenCeption (depth, segmentation, normals, keypoints)
+
 ## Checkpoints
 
 We release the following checkpoints
@@ -66,6 +73,9 @@ We release the following checkpoints
 | RVM | Encoder + Decoder (ViT-H) | 743M | 3.1GB | [link](https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_huge16_256_203854202.npz) |
 | DINOv2 | Frozen Teacher (ViT-B) | 86.5M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/frozen_dinov2-vit_b.safetensors) |
 | Omnivorous DINOv2 |  Adapted Student (ViT-B) | 86.5M | 1.6GB | [link](https://storage.googleapis.com/representations4d/checkpoints/omnivorous_dinov2-vit_b.safetensors) |
+| GenCeption | Transformer (WAN 14B) | 14B | 26.7GB | [link](https://storage.googleapis.com/representations4d/checkpoints/genception/genception_14b_transformer.npz) |
+| GenCeption | Transformer (WAN 1.3B) | 1.3B | 2.7GB | [link](https://storage.googleapis.com/representations4d/checkpoints/genception/genception_1.3b_transformer.npz) |
+| GenCeption | VAE | 100M | 484MB | [link](https://storage.googleapis.com/representations4d/checkpoints/genception/vae/diffusion_pytorch_model.safetensors) |
 
 ## Citing this work
 
@@ -100,18 +110,29 @@ We release the following checkpoints
 
 ```
 @InProceedings{Kabra_2026_CVPR,
-    author    = {Kabra, Rishabh and Ovsjanikov, Maks and Hudson, Drew A. and Xia, Ye and Koppula, Skanda and Araujo, Andre and Carreira, Joao and Mitra, Niloy J.},
-    title     = {A Mixed Diet Makes DINO An Omnivorous Vision Encoder},
-    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    month     = {June},
-    year      = {2026},
-    pages     = {36850-36860}
+  author    = {Kabra, Rishabh and Ovsjanikov, Maks and Hudson, Drew A. and Xia, Ye and Koppula, Skanda and Araujo, Andre and Carreira, Joao and Mitra, Niloy J.},
+  title     = {A Mixed Diet Makes DINO An Omnivorous Vision Encoder},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  month     = {June},
+  year      = {2026},
+  pages     = {36850-36860}
+}
+```
+
+```
+@inproceedings{wang2026genception,
+  title     = {Video Generation Models are General-Purpose Vision Learners},
+  author    = {Wang, Letian and Zhang, Chuhan and Kabra, Rishabh and Uijlings, Jasper and
+               Waslander, Steven and Zisserman, Andrew and Carreira, Joao and He, Kaiming and
+               Andriluka, Misha and Bazavan, Eduard Gabriel and Zanfir, Andrei and Sminchisescu, Cristian},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2026}
 }
 ```
 
 ## License and disclaimer
 
-Copyright 2025 Google LLC
+Copyright 2026 Google LLC
 
 All software is licensed under the Apache License, Version 2.0 (Apache 2.0);
 you may not use this file except in compliance with the Apache 2.0 license.

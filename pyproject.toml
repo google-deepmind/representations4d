@@ -11,7 +11,15 @@ dependencies = [
   "typeguard",
 ]
 
+[project.optional-dependencies]
+genception = [
+  "ml_dtypes",
+  "torch",
+  "safetensors",
+  "mediapy",
+]
+
 
 [tool.setuptools.packages.find]
 where = ["."]  # list of folders that contain the packages (["."] by default)
-include = ["representations4d*", "moog*"]  # package names should match these glob patterns (["*"] by default)
+include = ["representations4d*", "moog*", "genception*"]  # package names should match these glob patterns (["*"] by default)
