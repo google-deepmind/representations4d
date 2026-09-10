@@ -26,8 +26,8 @@ any runtime dependency on HuggingFace transformers or PyTorch.
 
 Typical usage::
 
-    from genception import GenCeptionPipeline
-    from genception.utils import load_video, save_video
+    from representations4d.genception import GenCeptionPipeline
+    from representations4d.genception.utils import load_video, save_video
     import numpy as np
 
     pipe = GenCeptionPipeline.from_pretrained(
