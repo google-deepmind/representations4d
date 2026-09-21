@@ -191,12 +191,36 @@ def main(_):
   depth_time = time.time() - t0
   logger.info("Forward pass took %.1f seconds", depth_time)
 
-  # Save depth frame
+  # Save raw colored depth frame (direct model output).
   depth_frame = depth_video[depth_video.shape[0] // 2]  # middle frame
   Image.fromarray(depth_frame).save(
-      os.path.join(OUTPUT_DIR, "depth_prediction.png")
+      os.path.join(OUTPUT_DIR, "depth_colored.png")
   )
-  logger.info("Saved depth prediction frame.")
+  logger.info("Saved raw colored depth frame.")
+
+  # Decode colored + log-scaled depth to relative depth.
+  depth_relative = pipe.decode_depth(depth_video)
+  logger.info(
+      "Decoded relative depth: shape=%s, range=[%.4f, %.4f]",
+      depth_relative.shape,
+      depth_relative.min(),
+      depth_relative.max(),
+  )
+
+  # Save decoded relative depth as a grayscale visualization.
+  rel_frame = depth_relative[depth_relative.shape[0] // 2]
+  # Normalize to [0, 255] for visualization.
+  rel_min, rel_max = rel_frame.min(), rel_frame.max()
+  if rel_max > rel_min:
+    rel_vis = ((rel_frame - rel_min) / (rel_max - rel_min) * 255).astype(
+        np.uint8
+    )
+  else:
+    rel_vis = np.zeros_like(rel_frame, dtype=np.uint8)
+  Image.fromarray(rel_vis, mode="L").save(
+      os.path.join(OUTPUT_DIR, "depth_relative.png")
+  )
+  logger.info("Saved decoded relative depth frame.")
 
   # Note: segmentation pass skipped (also needs text encoder).
   # With zero text embeddings, the output is a smoke test only.
@@ -211,12 +235,14 @@ def main(_):
   np.savez(
       os.path.join(OUTPUT_DIR, "results.npz"),
       input_image=input_image,
-      depth_frame=depth_frame,
+      depth_colored=depth_frame,
+      depth_relative=depth_relative,
   )
 
   logger.info("\n=== Results Summary ===")
   logger.info("Input image: %s", INPUT_IMAGE_PATH)
-  logger.info("Depth prediction: %s/depth_prediction.png", OUTPUT_DIR)
+  logger.info("Colored depth: %s/depth_colored.png", OUTPUT_DIR)
+  logger.info("Relative depth: %s/depth_relative.png", OUTPUT_DIR)
   logger.info("Visualization: %s", vis_path)
   logger.info("Forward pass time: %.1f seconds", depth_time)
 

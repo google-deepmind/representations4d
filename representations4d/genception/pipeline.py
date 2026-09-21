@@ -58,6 +58,7 @@ import numpy as np
 
 # pylint: disable=g-importing-member,g-bare-generic
 from representations4d.genception.model import WanModel
+from representations4d.genception.utils import colored_depth_to_relative_depth
 from representations4d.genception.utils import load_transformer_checkpoint
 from representations4d.genception.utils import postprocess_video
 from representations4d.genception.utils import preprocess_video
@@ -139,7 +140,7 @@ _DEFAULT_CONFIGS = {
         'height': 480,
         'width': 832,
         'normalize_latents': False,
-        'diffusion_single_step': -1,
+        'diffusion_single_step': 0,
     },
     '1.3b': {
         'num_attention_heads': 12,
@@ -168,7 +169,7 @@ _DEFAULT_CONFIGS = {
         'height': 480,
         'width': 832,
         'normalize_latents': False,
-        'diffusion_single_step': -1,
+        'diffusion_single_step': 0,
     },
 }
 
@@ -569,6 +570,58 @@ class GenCeptionPipeline:
     video = postprocess_video(video)  # [-1, 1] -> uint8 [0, 255]
     return video
 
+  def decode_depth(
+      self,
+      depth_video: np.ndarray,
+      depth_scaling_factor: float = 0.4,
+  ) -> np.ndarray:
+    """Convert colored depth output to relative depth values.
+
+    The GenCeption model predicts depth as a colored, log-scaled RGB video.
+    This method reverses both transformations to recover the underlying
+    relative depth map.
+
+    The encoding pipeline applied during training is:
+
+    1. **Log scaling**: ``scaled = clip(c * ln(depth + 1), 0, 1)``
+    2. **Banana coloring**: scalar → RGB via 7-segment path along the
+       RGB cube edges (Black → Red → Yellow → Green → Cyan → Blue →
+       Magenta → White).
+
+    This method inverts both steps.
+
+    Example::
+
+        result = pipe(prompt_embeds=depth_embeds, input_video=video)
+        relative_depth = pipe.decode_depth(result['video'])  # [T, H, W]
+
+    Args:
+        depth_video: ``uint8`` array of shape ``[T, H, W, 3]`` (or
+          ``[B, T, H, W, 3]``) as returned by the pipeline. Float
+          arrays in ``[0, 1]`` are also accepted.
+        depth_scaling_factor: Log-scale factor ``c`` used during training.
+          Default ``0.4`` matches the current GenCeption model.
+
+    Returns:
+        ``float32`` array of shape ``[T, H, W]`` (or ``[B, T, H, W]``)
+        containing relative depth values.
+    """
+    depth_video = np.asarray(depth_video)
+
+    # Handle optional batch dimension.
+    if depth_video.ndim == 5:
+      return np.stack(
+          [
+              colored_depth_to_relative_depth(
+                  depth_video[b], depth_scaling_factor
+              )
+              for b in range(depth_video.shape[0])
+          ],
+          axis=0,
+      )
+
+    return colored_depth_to_relative_depth(depth_video, depth_scaling_factor)
+
   # -----------------------------------------------------------------------
   # Full inference pipeline
   # -----------------------------------------------------------------------
@@ -578,21 +631,23 @@ class GenCeptionPipeline:
       prompt_embeds: Union[np.ndarray, jnp.ndarray, str, os.PathLike],
       input_video: Optional[Union[np.ndarray, jnp.ndarray]] = None,
       latents: Optional[jnp.ndarray] = None,
+      timestep: Optional[int] = None,
       num_inference_steps: int = 50,
       return_tokens: bool = False,
   ) -> Dict[str, Any]:
     """Run the full GenCeption inference pipeline.
 
     The model is a single-step predictor: it encodes the input video via the
-    VAE, runs **one** transformer forward pass at timestep
-    ``num_train_timesteps - 1``, and decodes the predicted clean latent
-    back to pixel space.
+    VAE, runs **one** transformer forward pass at conditioning timestep
+    ``t = 0`` (to signify that the input is noise-free, corresponding to the
+    termination of the generative Rectified Flow process), and decodes the
+    predicted clean latent back to pixel space.
 
     Steps:
 
     1. Encode ``input_video`` to VAE latent space (or use provided ``latents``).
     2. Validate and prepare ``prompt_embeds``.
-    3. Run a single transformer forward pass at ``t = num_train_timesteps - 1``.
+    3. Run a single transformer forward pass at ``t = 0``.
     4. Decode the predicted latents via the VAE.
 
     Args:
@@ -604,6 +659,8 @@ class GenCeptionPipeline:
           ``latents`` are provided directly.
         latents: Optional pre-encoded VAE latents. If provided, skips the
           ``encode_video`` step.
+        timestep: Optional conditioning timestep override. Defaults to ``None``
+          (uses ``config['diffusion_single_step']`` or ``0``).
         num_inference_steps: Number of inference steps (default 50).
         return_tokens: If ``True``, also return the token predictions (e.g.
           keypoint regressions).
@@ -636,13 +693,18 @@ class GenCeptionPipeline:
     logger.info('Prepared prompt embeddings: %s', prompt_embeds.shape)
 
     # 3. Single forward pass.
-    # DeepSense timestep resolution logic
+    # GenCeption feedforward formulation: conditioning timestep is fixed to t=0
+    # to signify that the input is noise-free (termination of generative
+    # Rectified Flow).
     bsz = latents.shape[0]
-    single_step = self.config.get('diffusion_single_step', -1)
-    if single_step != -1:
-      timestep_val = single_step
+    if timestep is not None:
+      timestep_val = timestep
     else:
-      timestep_val = num_inference_steps - 1
+      single_step = self.config.get('diffusion_single_step', 0)
+      if single_step is not None and single_step >= 0:
+        timestep_val = single_step
+      else:
+        timestep_val = 0
 
     timestep_array = jnp.full((bsz,), timestep_val, dtype=jnp.int32)
 

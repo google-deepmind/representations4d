@@ -18,4 +18,7 @@
 # pylint: disable=g-importing-member
 from representations4d.genception.model import WanModel
 from representations4d.genception.pipeline import GenCeptionPipeline
+from representations4d.genception.utils import colored_depth_to_relative_depth
+from representations4d.genception.utils import depth_to_rgb
+from representations4d.genception.utils import rgb_to_depth_robust
 from representations4d.genception.vae import AutoencoderKLWan
