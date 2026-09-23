@@ -19,12 +19,13 @@ Provides helpers for checkpoint I/O, video loading/saving, and
 video pre/post-processing used by the inference pipeline.
 """
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import imageio
 import jax
 import jax.numpy as jnp
 import mediapy as media
 import numpy as np
+from PIL import Image as _PILImage
 
 # BlockSizes is used as a type hint for flash-attention block sizes.
 # It is a dict mapping block-size names to integer values, or None.
@@ -367,3 +368,333 @@ def colored_depth_to_relative_depth(
     depth_frames.append(relative_depth)
 
   return np.stack(depth_frames, axis=0).astype(np.float32)
+
+
+# ---------------------------------------------------------------------------
+# Point cloud visualization (NumPy point splatting)
+# ---------------------------------------------------------------------------
+
+
+def unproject_depth_to_points(
+    depth: np.ndarray,
+    rgb: Optional[np.ndarray] = None,
+    fx: Optional[float] = None,
+    fy: Optional[float] = None,
+    cx: Optional[float] = None,
+    cy: Optional[float] = None,
+    min_depth: float = 0.01,
+    max_depth_percentile: float = 99.9,
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  """Unproject a 2D depth map (and optional RGB frame) to 3D camera coordinates.
+
+  Uses standard pinhole camera projection:
+    X = (u - cx) * depth / fx
+    Y = (v - cy) * depth / fy
+    Z = depth
+
+  Args:
+    depth: 2D array of shape ``[H, W]`` with depth values.
+    rgb: Optional array of shape ``[H, W, 3]`` with RGB colors in ``[0, 1]``.
+    fx: Focal length along x. Defaults to ``0.75 * W``.
+    fy: Focal length along y. Defaults to ``0.75 * W``.
+    cx: Principal point x. Defaults to ``W / 2.0``.
+    cy: Principal point y. Defaults to ``H / 2.0``.
+    min_depth: Minimum depth threshold to filter near/invalid points.
+    max_depth_percentile: Filter out points beyond this depth percentile.
+
+  Returns:
+    A tuple of ``(points, colors)`` where ``points`` is an ``[N, 3]`` float32
+    array and ``colors`` is an ``[N, 3]`` float32 array (or None if rgb is
+    None).
+  """
+  depth = np.asarray(depth, dtype=np.float32)
+  h, w = depth.shape
+  if fx is None:
+    fx = float(w) * 0.75
+  if fy is None:
+    fy = float(w) * 0.75
+  if cx is None:
+    cx = w / 2.0
+  if cy is None:
+    cy = h / 2.0
+
+  uu, vv = np.meshgrid(
+      np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32)
+  )
+  pts = np.stack(
+      [(uu - cx) * depth / fx, (vv - cy) * depth / fy, depth], axis=-1
+  ).reshape(-1, 3)
+
+  max_d = (
+      float(np.percentile(pts[:, 2], max_depth_percentile))
+      if len(pts) > 0
+      else np.inf
+  )
+  valid = (
+      np.isfinite(pts[:, 2]) & (pts[:, 2] > min_depth) & (pts[:, 2] <= max_d)
+  )
+
+  pts_valid = pts[valid]
+  if rgb is not None:
+    cols = np.asarray(rgb, dtype=np.float32).reshape(-1, 3)
+    cols_valid = cols[valid]
+    return pts_valid, cols_valid
+  return pts_valid, None
+
+
+def compute_pointcloud_framing(
+    pts: np.ndarray,
+    yaw_deg: float = 0.0,
+    pitch_deg: float = -5.0,
+    pull_back: float = 0.22,
+    out_w: int = 1080,
+    out_h: int = 750,
+) -> Dict[str, Any]:
+  """Computes locked camera framing from 3D points.
+
+  Orbits around the scene median, rotates by (yaw, pitch), pulls the camera
+  back along Z, and computes 2D perspective scale and offset to center the
+  point cloud in the output canvas.
+
+  Args:
+    pts: Array of shape ``[N, 3]`` containing 3D points.
+    yaw_deg: Camera yaw angle in degrees.
+    pitch_deg: Camera pitch angle in degrees.
+    pull_back: Distance multiplier behind the frustum apex.
+    out_w: Target output width in pixels.
+    out_h: Target output height in pixels.
+
+  Returns:
+    Dictionary containing camera parameters: ``'pivot'``, ``'z_offset'``,
+    ``'R'``, ``'ux_mid'``, ``'uy_mid'``, and ``'scale'``.
+  """
+  if len(pts) == 0:
+    return {
+        'pivot': np.zeros(3, dtype=np.float32),
+        'z_offset': 1.0,
+        'R': np.eye(3, dtype=np.float32),
+        'ux_mid': 0.0,
+        'uy_mid': 0.0,
+        'scale': 1.0,
+    }
+
+  pivot = np.median(pts, axis=0)
+  z_span = float(np.percentile(pts[:, 2], 90) - np.percentile(pts[:, 2], 5))
+  yaw, pitch = np.radians(yaw_deg), np.radians(pitch_deg)
+
+  ry = np.array(
+      [
+          [np.cos(yaw), 0.0, np.sin(yaw)],
+          [0.0, 1.0, 0.0],
+          [-np.sin(yaw), 0.0, np.cos(yaw)],
+      ],
+      dtype=np.float32,
+  )
+  rx = np.array(
+      [
+          [1.0, 0.0, 0.0],
+          [0.0, np.cos(pitch), -np.sin(pitch)],
+          [0.0, np.sin(pitch), np.cos(pitch)],
+      ],
+      dtype=np.float32,
+  )
+  r = rx @ ry
+
+  p = (pts - pivot) @ r.T
+  z_offset = float(pivot[2] + pull_back * z_span)
+  p[:, 2] += z_offset
+
+  front = p[:, 2] > 0.05
+  p = p[front] if np.any(front) else p
+
+  ux = p[:, 0] / np.maximum(p[:, 2], 1e-4)
+  uy = p[:, 1] / np.maximum(p[:, 2], 1e-4)
+  ux_lo, ux_hi = np.percentile(ux, [0.5, 99.5])
+  uy_lo, uy_hi = np.percentile(uy, [0.5, 99.5])
+
+  scale = 0.85 * min(
+      out_w / max(float(ux_hi - ux_lo), 1e-5),
+      out_h / max(float(uy_hi - uy_lo), 1e-5),
+  )
+
+  return {
+      'pivot': pivot,
+      'z_offset': z_offset,
+      'R': r,
+      'ux_mid': float(0.5 * (ux_lo + ux_hi)),
+      'uy_mid': float(0.5 * (uy_lo + uy_hi)),
+      'scale': float(scale),
+  }
+
+
+def render_pointcloud_frame(
+    pts: np.ndarray,
+    cols: np.ndarray,
+    framing: Optional[Dict[str, Any]] = None,
+    yaw_deg: float = 0.0,
+    pitch_deg: float = -5.0,
+    pull_back: float = 0.22,
+    out_w: int = 1080,
+    out_h: int = 750,
+    radius: int = 1,
+    bg_color: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+) -> np.ndarray:
+  """Renders a single point cloud frame using painter's algorithm and splatting.
+
+  Args:
+    pts: Array of shape ``[N, 3]`` containing 3D points.
+    cols: Array of shape ``[N, 3]`` containing RGB colors in ``[0, 1]``.
+    framing: Optional precomputed camera framing dict. If None, computed from
+      pts.
+    yaw_deg: Camera yaw angle in degrees (used when framing is None).
+    pitch_deg: Camera pitch angle in degrees (used when framing is None).
+    pull_back: Pull back factor (used when framing is None).
+    out_w: Canvas width in pixels.
+    out_h: Canvas height in pixels.
+    radius: Radius of point splat in pixels.
+    bg_color: Background color tuple in ``[0, 1]`` (default white).
+
+  Returns:
+    ``uint8`` array of shape ``[out_h, out_w, 3]`` with values in ``[0, 255]``.
+  """
+  if framing is None:
+    framing = compute_pointcloud_framing(
+        pts,
+        yaw_deg=yaw_deg,
+        pitch_deg=pitch_deg,
+        pull_back=pull_back,
+        out_w=out_w,
+        out_h=out_h,
+    )
+
+  if len(pts) == 0:
+    return (
+        np.full((out_h, out_w, 3), bg_color, dtype=np.float32) * 255.0
+    ).astype(np.uint8)
+
+  p = (pts - framing['pivot']) @ framing['R'].T
+  p[:, 2] += framing['z_offset']
+
+  front = p[:, 2] > 0.05
+  p, c = p[front], cols[front]
+
+  if len(p) == 0:
+    return (
+        np.full((out_h, out_w, 3), bg_color, dtype=np.float32) * 255.0
+    ).astype(np.uint8)
+
+  z_safe = np.maximum(p[:, 2], 1e-4)
+  px = (
+      (p[:, 0] / z_safe - framing['ux_mid']) * framing['scale'] + out_w / 2.0
+  ).astype(np.int32)
+  py = (
+      (p[:, 1] / z_safe - framing['uy_mid']) * framing['scale'] + out_h / 2.0
+  ).astype(np.int32)
+
+  # Painter's algorithm: sort by distance (far -> near)
+  order = np.argsort(-p[:, 2])
+  px, py, c = px[order], py[order], c[order]
+
+  img = np.full((out_h, out_w, 3), bg_color, dtype=np.float32)
+  for dy in range(-radius, radius + 1):
+    for dx in range(-radius, radius + 1):
+      if dx * dx + dy * dy <= radius * radius + 1:
+        xi, yi = px + dx, py + dy
+        ok = (xi >= 0) & (xi < out_w) & (yi >= 0) & (yi < out_h)
+        img[yi[ok], xi[ok]] = c[ok]
+
+  return (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)
+
+
+def render_pointcloud_video(
+    relative_depth: np.ndarray,
+    video: np.ndarray,
+    out_w: int = 1080,
+    out_h: int = 750,
+    yaw_deg: float = 0.0,
+    pitch_deg: float = -5.0,
+    pull_back: float = 0.22,
+    radius: int = 1,
+    bg_color: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+    show_progress: bool = True,
+) -> np.ndarray:
+  """Render a point cloud video from relative depth and RGB video via splatting.
+
+  Locks camera framing from frame 0 so the virtual camera remains stable and
+  jitter-free throughout the video sequence.
+
+  Args:
+    relative_depth: Array of shape ``[T, H, W]`` containing relative depth.
+    video: Array of shape ``[T, H_in, W_in, 3]`` containing RGB frames. Can be
+      uint8 ``[0, 255]``, float ``[0, 1]``, or float ``[-1, 1]``.
+    out_w: Output video width in pixels.
+    out_h: Output video height in pixels.
+    yaw_deg: Camera yaw angle in degrees.
+    pitch_deg: Camera pitch angle in degrees.
+    pull_back: Camera pull-back factor.
+    radius: Point splat radius in pixels.
+    bg_color: Canvas background color in ``[0, 1]`` (default white).
+    show_progress: Whether to print progress during rendering.
+
+  Returns:
+    ``uint8`` array of shape ``[T, out_h, out_w, 3]`` with values in ``[0,
+    255]``.
+  """
+  relative_depth = np.asarray(relative_depth, dtype=np.float32)
+  t_len, h, w = relative_depth.shape
+
+  # Normalize RGB frames to [0, 1].
+  rgb_all = np.asarray(video, dtype=np.float32)
+  if rgb_all.min() < -0.01:
+    rgb_all = (rgb_all + 1.0) / 2.0
+  elif rgb_all.max() > 1.5:
+    rgb_all = rgb_all / 255.0
+  rgb_all = np.clip(rgb_all, 0.0, 1.0)
+
+  # Resize RGB if needed to match depth resolution (h, w).
+  if rgb_all.shape[1:3] != (h, w):
+    resized = []
+    for t in range(len(rgb_all)):
+      u8 = (rgb_all[t] * 255.0).astype(np.uint8)
+      resized.append(
+          np.asarray(
+              _PILImage.fromarray(u8).resize((w, h), _PILImage.BILINEAR),
+              dtype=np.float32,
+          )
+          / 255.0
+      )
+    rgb_all = np.stack(resized)
+
+  # Lock framing from frame 0.
+  pts0, _ = unproject_depth_to_points(relative_depth[0])
+  framing = compute_pointcloud_framing(
+      pts0,
+      yaw_deg=yaw_deg,
+      pitch_deg=pitch_deg,
+      pull_back=pull_back,
+      out_w=out_w,
+      out_h=out_h,
+  )
+
+  if show_progress:
+    print(f'Rendering point cloud video: {t_len} frames at {out_w}x{out_h}...')
+
+  rendered_frames = []
+  for t in range(t_len):
+    c_frame = rgb_all[min(t, len(rgb_all) - 1)]
+    pts, cols = unproject_depth_to_points(relative_depth[t], rgb=c_frame)
+    frame = render_pointcloud_frame(
+        pts,
+        cols,
+        framing=framing,
+        out_w=out_w,
+        out_h=out_h,
+        radius=radius,
+        bg_color=bg_color,
+    )
+    rendered_frames.append(frame)
+    if show_progress and ((t + 1) % 20 == 0 or t == t_len - 1):
+      print(f'  {t + 1}/{t_len} frames rendered')
+
+  pointcloud_video = np.stack(rendered_frames, axis=0)
+  return pointcloud_video
