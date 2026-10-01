@@ -23,7 +23,6 @@ from representations4d.genception.utils import compute_pointcloud_framing
 from representations4d.genception.utils import depth_to_rgb
 from representations4d.genception.utils import render_pointcloud_frame
 from representations4d.genception.utils import render_pointcloud_video
-from representations4d.genception.utils import render_pointcloud_view
 from representations4d.genception.utils import rgb_to_depth_robust
 from representations4d.genception.utils import unproject_depth_to_points
 from representations4d.genception.vae import AutoencoderKLWan
