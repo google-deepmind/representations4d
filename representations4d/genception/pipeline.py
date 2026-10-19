@@ -556,7 +556,9 @@ class GenCeptionPipeline:
       latents = latents / latents_std + latents_mean
       latents = latents.astype(dtype)
 
-    # Decode via VAE: accepts [B, C, T', H', W'] (auto-transposes internally).
+    # Pass the VAE its preferred channels-last layout explicitly. Its shape
+    # heuristic cannot distinguish channels-first latents when W' == C.
+    latents = jnp.transpose(latents, (0, 2, 3, 4, 1))
     self.vae_cache.clear_cache()
     decoded = self.vae.decode(latents, self.vae_cache)
 
