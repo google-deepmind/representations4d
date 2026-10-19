@@ -2,11 +2,11 @@
 
 Welcome to the official Google DeepMind repository for 4D Representations.
 
+<!-- disableFinding(LINE_OVER_80) -->
+
 * [Scaling 4D Representations](https://arxiv.org/abs/2412.15212) focuses on evaluating self-supervised learning on non-semantic vision tasks that are more spatial (3D) and temporal (+1D = 4D), such as camera pose estimation, point and object tracking, and depth estimation. We show that by learning from very large video datasets, masked auto-encoding (MAE) with transformer video models actually scales, consistently improving performance on these 4D tasks, as model size increases from 20M all the way to the largest by far reported self-supervised video model 22B parameters.
 
 ![scaling results](./assets/scaling_20M_20B.png)
-
-<!-- disableFinding(LINE_OVER_80) -->
 
 * [Moving Off-the-Grid (MooG)](https://openreview.net/pdf?id=rjSPDVdUaw) introduces a self-supervised video representation that allows latent tokens to move freely across space and time, staying aligned with dynamic scene elements rather than fixed pixel grids. By combining cross-attention with positional embeddings, MooG disentangles representation structure from image structure, enabling tokens to bind to meaningful objects and regions. Trained with a simple next-frame prediction objective, MooG naturally learns object-centric tracking representations and achieves strong performance across downstream tasks with lightweight readouts.
 
@@ -62,6 +62,7 @@ We release the following checkpoints
 | Name | Model | # Params | File Size | Checkpoint |
 | -------- | ------- | :-------: | :-------: | :-------: |
 | 4DS-B-dist-e | Backbone (ViT-B) | 88M | 334MB | [link](https://storage.googleapis.com/representations4d/checkpoints/scaling4d_dist_b.npz) |
+| 4DS-L | Backbone (ViT-L) | 305M | 1.2GB | [link](https://storage.googleapis.com/representations4d/checkpoints/scaling4d_l.npz) |
 | 4DS-e | Backbone (ViT-e) | 3.8B | 14GB | [link](https://storage.googleapis.com/representations4d/checkpoints/scaling4d_e.npz) |
 | 4DS-B-dist-e ScanNet depth | Backbone (ViT-B) + Readout | 105M | 420MB | [link](https://storage.googleapis.com/representations4d/checkpoints/scaling4d_dist_b_depth.npz) |
 | MooG | Backbone (ConvNet + Transformer) | 35M | 140MB | [link](https://storage.googleapis.com/representations4d/checkpoints/moog_ego4d_backbone_ckpt_164335139.npz) |
