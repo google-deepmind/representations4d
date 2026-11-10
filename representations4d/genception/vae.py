@@ -124,12 +124,17 @@ class DiagonalGaussianDistribution:
   def kl(
       self, other: Optional["DiagonalGaussianDistribution"] = None
   ) -> jnp.ndarray:
-    """Compute KL divergence against another Gaussian (or standard normal)."""
+    """Return one KL divergence per batch item, summing all event dimensions.
+
+    Video posteriors have shape [B, T, H, W, C], so the channel axis is part
+    of the event alongside the temporal and spatial axes.
+    """
     if self.deterministic:
-      return jnp.array([0.0])
+      return jnp.zeros((self.mean.shape[0],), dtype=self.mean.dtype)
+    event_axes = tuple(range(1, self.mean.ndim))
     if other is None:
       return 0.5 * jnp.sum(
-          self.mean**2 + self.var - 1.0 - self.logvar, axis=[1, 2, 3]
+          self.mean**2 + self.var - 1.0 - self.logvar, axis=event_axes
       )
     return 0.5 * jnp.sum(
         jnp.square(self.mean - other.mean) / other.var
@@ -137,7 +142,7 @@ class DiagonalGaussianDistribution:
         - 1.0
         - self.logvar
         + other.logvar,
-        axis=[1, 2, 3],
+        axis=event_axes,
     )
 
   def mode(self) -> jnp.ndarray:
