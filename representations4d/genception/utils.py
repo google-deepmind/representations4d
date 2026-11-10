@@ -98,8 +98,8 @@ def save_video(
   Requires *mediapy* (``pip install mediapy``).
 
   Args:
-    video: Array of shape ``[T, H, W, 3]``, ``uint8`` or ``float`` in
-      ``[0, 1]``.
+    video: Array of shape ``[T, H, W, 3]``, ``uint8`` or ``float`` in ``[0,
+      1]``.
     path: Destination file path (e.g. ``'output.mp4'``).
     fps: Frames per second.
   """
@@ -170,8 +170,8 @@ def preprocess_video(
   """Resize, temporally sample, and normalize a video for VAE encoding.
 
   Args:
-    video: Input video, shape ``[T, H, W, 3]``.  Can be ``uint8``
-      (values 0–255) or ``float`` (values 0.0–1.0).
+    video: Input video, shape ``[T, H, W, 3]``.  Can be ``uint8`` (values 0–255)
+      or ``float`` (values 0.0–1.0).
     height: Target spatial height (default 480).
     width: Target spatial width (default 832).
     num_frames: Target number of frames (default 81).
@@ -210,8 +210,8 @@ def postprocess_video(video: jnp.ndarray) -> jnp.ndarray:
   the VAE decode output (which is in ``[-1, 1]``).
 
   Args:
-    video: Array of shape ``[T, H, W, 3]`` (or ``[B, T, H, W, 3]``)
-      with values in ``[-1, 1]``.
+    video: Array of shape ``[T, H, W, 3]`` (or ``[B, T, H, W, 3]``) with values
+      in ``[-1, 1]``.
 
   Returns:
     ``uint8`` array in ``[0, 255]`` with the same shape.
@@ -231,16 +231,19 @@ def postprocess_video(video: jnp.ndarray) -> jnp.ndarray:
 # The 8 vertices of the RGB cube traversed by the "banana" / "vision banana"
 # colormap.  The path Black → Red → Yellow → Green → Cyan → Blue → Magenta →
 # White defines 7 piecewise-linear segments along the edges of the unit cube.
-_BANANA_COLORS = np.array([
-    [0.0, 0.0, 0.0],  # 0: Black
-    [1.0, 0.0, 0.0],  # 1: Red
-    [1.0, 1.0, 0.0],  # 2: Yellow
-    [0.0, 1.0, 0.0],  # 3: Green
-    [0.0, 1.0, 1.0],  # 4: Cyan
-    [0.0, 0.0, 1.0],  # 5: Blue
-    [1.0, 0.0, 1.0],  # 6: Magenta
-    [1.0, 1.0, 1.0],  # 7: White
-], dtype=np.float32)
+_BANANA_COLORS = np.array(
+    [
+        [0.0, 0.0, 0.0],  # 0: Black
+        [1.0, 0.0, 0.0],  # 1: Red
+        [1.0, 1.0, 0.0],  # 2: Yellow
+        [0.0, 1.0, 0.0],  # 3: Green
+        [0.0, 1.0, 1.0],  # 4: Cyan
+        [0.0, 0.0, 1.0],  # 5: Blue
+        [1.0, 0.0, 1.0],  # 6: Magenta
+        [1.0, 1.0, 1.0],  # 7: White
+    ],
+    dtype=np.float32,
+)
 
 _NUM_SEGMENTS = len(_BANANA_COLORS) - 1  # 7
 
@@ -282,8 +285,8 @@ def rgb_to_depth_robust(rgb: np.ndarray) -> np.ndarray:
   robust to the color noise introduced by VAE decoding.
 
   Args:
-    rgb: Array of shape ``(..., 3)`` with RGB values in ``[0, 1]`` (float)
-      or ``[0, 255]`` (``uint8``).
+    rgb: Array of shape ``(..., 3)`` with RGB values in ``[0, 1]`` (float) or
+      ``[0, 255]`` (``uint8``).
 
   Returns:
     Array of shape ``(...)`` with ``float32`` depth values in ``[0, 1]``.
@@ -294,9 +297,9 @@ def rgb_to_depth_robust(rgb: np.ndarray) -> np.ndarray:
   else:
     rgb = rgb.astype(np.float32)
 
-  seg_starts = _BANANA_COLORS[:-1]   # (7, 3), float32
-  seg_ends = _BANANA_COLORS[1:]      # (7, 3), float32
-  seg_dirs = seg_ends - seg_starts   # (7, 3), float32
+  seg_starts = _BANANA_COLORS[:-1]  # (7, 3), float32
+  seg_ends = _BANANA_COLORS[1:]  # (7, 3), float32
+  seg_dirs = seg_ends - seg_starts  # (7, 3), float32
 
   # Expand rgb for broadcasting: (..., 3) → (..., 1, 3).
   rgb_expanded = rgb[..., np.newaxis, :]
@@ -307,8 +310,8 @@ def rgb_to_depth_robust(rgb: np.ndarray) -> np.ndarray:
   # Projection coefficient t onto each segment.
   # All seg_dirs vectors have unit L2 norm, so ||seg_dirs||² = 1 — no
   # denominator needed.
-  t = np.sum(to_query * seg_dirs, axis=-1)   # (..., 7)
-  t_clamped = np.clip(t, 0.0, 1.0)           # (..., 7)
+  t = np.sum(to_query * seg_dirs, axis=-1)  # (..., 7)
+  t_clamped = np.clip(t, 0.0, 1.0)  # (..., 7)
 
   # Closest point on each segment.
   proj_pts = seg_starts + t_clamped[..., np.newaxis] * seg_dirs  # (..., 7, 3)
@@ -318,9 +321,9 @@ def rgb_to_depth_robust(rgb: np.ndarray) -> np.ndarray:
 
   # Pick the nearest segment.
   best_seg = np.argmin(dist_sq, axis=-1)  # (...)
-  best_t = np.take_along_axis(
-      t_clamped, best_seg[..., np.newaxis], axis=-1
-  )[..., 0]  # (...)
+  best_t = np.take_along_axis(t_clamped, best_seg[..., np.newaxis], axis=-1)[
+      ..., 0
+  ]  # (...)
 
   depth = (best_seg + best_t) / float(_NUM_SEGMENTS)
   return depth.astype(np.float32)
@@ -344,8 +347,8 @@ def colored_depth_to_relative_depth(
      ``d = exp(scaled / c) - 1``.
 
   Args:
-    rgb_video: Array of shape ``[T, H, W, 3]`` with RGB values in
-      ``[0, 1]`` (float) or ``[0, 255]`` (``uint8``).
+    rgb_video: Array of shape ``[T, H, W, 3]`` with RGB values in ``[0, 1]``
+      (float) or ``[0, 255]`` (``uint8``).
     depth_scaling_factor: The log-scale factor ``c`` used during training.
       Default ``0.4`` matches the current GenCeption model.
 
@@ -368,6 +371,102 @@ def colored_depth_to_relative_depth(
     depth_frames.append(relative_depth)
 
   return np.stack(depth_frames, axis=0).astype(np.float32)
+
+
+# ---------------------------------------------------------------------------
+# Depth evaluation metrics
+# ---------------------------------------------------------------------------
+
+
+def compute_median_scale_and_shift(
+    preds: np.ndarray,
+    target: np.ndarray,
+    mask: np.ndarray,
+    axis: tuple[int, ...] = (-3, -2, -1),
+) -> tuple[np.ndarray, np.ndarray]:
+  """Compute median scale and shift to align predicted depth to ground truth.
+
+  Uses the MegaSaM-style median solver that minimises L1 loss.
+
+  Args:
+    preds: Predicted depth array.
+    target: Ground-truth depth array (same shape as *preds*).
+    mask: Boolean or ``{0, 1}`` mask of valid pixels.
+    axis: Axes over which to compute medians.
+
+  Returns:
+    ``(scale, shift)`` arrays broadcastable back to the input shape.
+  """
+  valid_mask = mask != 0
+  masked_target = np.where(valid_mask, target, np.nan)
+  masked_pred = np.where(valid_mask, preds, np.nan)
+
+  gt_median = np.nanmedian(masked_target, axis=axis, keepdims=True)
+  pred_median = np.nanmedian(masked_pred, axis=axis, keepdims=True)
+
+  gt_d_ms = masked_target - gt_median + 1e-6
+  pred_d_ms = masked_pred - pred_median + 1e-6
+
+  scale = np.nanmedian(gt_d_ms / pred_d_ms, axis=axis, keepdims=True)
+  shift = np.nanmedian(
+      masked_target - scale * masked_pred, axis=axis, keepdims=True
+  )
+  return scale, shift
+
+
+def compute_absrel(
+    gt_depth: np.ndarray,
+    pred_depth: np.ndarray,
+    max_depth: float = 70.0,
+) -> float:
+  """Absolute relative error (AbsRel) with median scale-and-shift alignment.
+
+  Args:
+    gt_depth: Ground-truth depth array (e.g. ``[T, H, W]``).
+    pred_depth: Predicted depth array (same shape).
+    max_depth: Ignore ground-truth pixels above this value.
+
+  Returns:
+    Scalar AbsRel value (lower is better).
+  """
+  mask = gt_depth < max_depth
+  scale, shift = compute_median_scale_and_shift(pred_depth, gt_depth, mask)
+  aligned = scale * pred_depth + shift
+  absrel = np.abs(aligned - gt_depth) / gt_depth
+  return float(((absrel * mask) / mask.sum()).sum())
+
+
+def compute_delta1(
+    gt_depth: np.ndarray,
+    pred_depth: np.ndarray,
+    max_depth: float = 70.0,
+    threshold: float = 1.25,
+    epsilon: float = 1e-6,
+) -> float:
+  """Delta-1 accuracy with median scale-and-shift alignment.
+
+  Fraction of valid pixels where
+  ``max(pred/gt, gt/pred) < threshold``.
+
+  Args:
+    gt_depth: Ground-truth depth array.
+    pred_depth: Predicted depth array (same shape).
+    max_depth: Ignore ground-truth pixels above this value.
+    threshold: Accuracy threshold (default 1.25).
+    epsilon: Small value to avoid division by zero.
+
+  Returns:
+    Scalar Delta-1 value in ``[0, 1]`` (higher is better).
+  """
+  mask = gt_depth < max_depth
+  scale, shift = compute_median_scale_and_shift(pred_depth, gt_depth, mask)
+  aligned = scale * pred_depth + shift
+  aligned = np.clip(aligned, a_min=0.0, a_max=None)
+  ratio = np.maximum(aligned, gt_depth) / (
+      np.minimum(aligned, gt_depth) + epsilon
+  )
+  correct = ratio < threshold
+  return float((correct * mask).sum() / mask.sum())
 
 
 # ---------------------------------------------------------------------------
