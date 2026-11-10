@@ -17,6 +17,15 @@ genception = [
   "torch",
   "safetensors",
   "mediapy",
+  "imageio",
+  "Pillow",
+]
+# Dependencies of the evaluation suite in representations4d/genception/evals.
+genception-evals = [
+  "representations4d[genception]",
+  "absl-py",
+  "opencv-python",
+  "transformers",
 ]
 
 
